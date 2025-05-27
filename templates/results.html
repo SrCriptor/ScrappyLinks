@@ -69,6 +69,45 @@
             </div>
         </div>
 
+        <!-- Download All Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="card-title mb-1">
+                                    <i class="fas fa-download me-2"></i>
+                                    Download em Massa
+                                </h6>
+                                <p class="card-text text-muted mb-0">Baixe todos os arquivos encontrados</p>
+                            </div>
+                            <div class="btn-group">
+                                {% if media_data.images %}
+                                <button class="btn btn-primary" onclick="downloadAllImages()">
+                                    <i class="fas fa-images me-2"></i>
+                                    Baixar Todas as Imagens
+                                </button>
+                                {% endif %}
+                                {% if media_data.videos %}
+                                <button class="btn btn-success" onclick="downloadAllVideos()">
+                                    <i class="fas fa-video me-2"></i>
+                                    Baixar Todos os Vídeos
+                                </button>
+                                {% endif %}
+                                {% if media_data.images and media_data.videos %}
+                                <button class="btn btn-info" onclick="downloadAllMedia()">
+                                    <i class="fas fa-download me-2"></i>
+                                    Baixar Tudo
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Tabs for Images and Videos -->
         <ul class="nav nav-tabs" id="mediaTabs" role="tablist">
             <li class="nav-item" role="presentation">

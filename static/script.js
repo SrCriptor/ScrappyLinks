@@ -44,6 +44,11 @@ function debounce(func, wait) {
 function validateUrl() {
     const urlInput = document.getElementById('url');
     const urlValidation = document.getElementById('urlValidation');
+    
+    if (!urlInput || !urlValidation) {
+        return;
+    }
+    
     const url = urlInput.value.trim();
 
     if (!url) {
@@ -264,4 +269,244 @@ function simulateProgress() {
         }
         updateProgress(progress);
     }, 500);
+}
+
+// Download all images
+function downloadAllImages() {
+    const images = document.querySelectorAll('#images img');
+    const imageUrls = Array.from(images).map(img => img.src).filter(src => src && src !== '');
+    
+    if (imageUrls.length === 0) {
+        alert('Nenhuma imagem encontrada para download.');
+        return;
+    }
+    
+    downloadMultipleFiles(imageUrls, 'imagens');
+}
+
+// Download all videos
+function downloadAllVideos() {
+    const videoElements = document.querySelectorAll('#videos video source, #videos a[href*="mp4"], #videos a[href*="webm"], #videos a[href*="ogg"]');
+    const videoUrls = Array.from(videoElements).map(element => {
+        if (element.tagName === 'SOURCE') {
+            return element.src;
+        } else {
+            return element.href;
+        }
+    }).filter(src => src && src !== '');
+    
+    // Also get direct video URLs from card text
+    const videoCards = document.querySelectorAll('#videos .card-body small');
+    videoCards.forEach(card => {
+        const url = card.textContent.trim();
+        if (url && (url.includes('.mp4') || url.includes('.webm') || url.includes('.ogg'))) {
+            videoUrls.push(url);
+        }
+    });
+    
+    if (videoUrls.length === 0) {
+        alert('Nenhum vídeo encontrado para download.');
+        return;
+    }
+    
+    downloadMultipleFiles(videoUrls, 'vídeos');
+}
+
+// Download all media (images and videos)
+function downloadAllMedia() {
+    const images = document.querySelectorAll('#images img');
+    const imageUrls = Array.from(images).map(img => img.src).filter(src => src && src !== '');
+    
+    const videoElements = document.querySelectorAll('#videos video source, #videos a[href*="mp4"], #videos a[href*="webm"], #videos a[href*="ogg"]');
+    const videoUrls = Array.from(videoElements).map(element => {
+        if (element.tagName === 'SOURCE') {
+            return element.src;
+        } else {
+            return element.href;
+        }
+    }).filter(src => src && src !== '');
+    
+    // Also get direct video URLs from card text
+    const videoCards = document.querySelectorAll('#videos .card-body small');
+    videoCards.forEach(card => {
+        const url = card.textContent.trim();
+        if (url && (url.includes('.mp4') || url.includes('.webm') || url.includes('.ogg'))) {
+            videoUrls.push(url);
+        }
+    });
+    
+    const allUrls = [...imageUrls, ...videoUrls];
+    
+    if (allUrls.length === 0) {
+        alert('Nenhum arquivo de mídia encontrado para download.');
+        return;
+    }
+    
+    downloadMultipleFiles(allUrls, 'arquivos de mídia');
+}
+
+// Helper function to download multiple files
+function downloadMultipleFiles(urls, type) {
+    if (!urls || urls.length === 0) {
+        alert(`Nenhum arquivo de ${type} encontrado.`);
+        return;
+    }
+    
+    const confirmed = confirm(`Deseja baixar ${urls.length} ${type}? Isso abrirá várias janelas de download.`);
+    
+    if (!confirmed) {
+        return;
+    }
+    
+    // Show progress toast
+    showDownloadProgressToast(urls.length, type);
+    
+    let downloadCount = 0;
+    const delay = 500; // Delay between downloads to avoid overwhelming the browser
+    
+    urls.forEach((url, index) => {
+        setTimeout(() => {
+            try {
+                // Create a temporary link element
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = getFileNameFromUrl(url);
+                link.target = '_blank';
+                
+                // Append to body, click, and remove
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                downloadCount++;
+                updateDownloadProgress(downloadCount, urls.length);
+                
+                if (downloadCount === urls.length) {
+                    setTimeout(() => {
+                        hideDownloadProgressToast();
+                        showCompletionToast(urls.length, type);
+                    }, 1000);
+                }
+            } catch (error) {
+                console.error('Erro ao baixar arquivo:', url, error);
+            }
+        }, index * delay);
+    });
+}
+
+// Extract filename from URL
+function getFileNameFromUrl(url) {
+    try {
+        const urlObj = new URL(url);
+        const pathname = urlObj.pathname;
+        const filename = pathname.split('/').pop();
+        
+        if (filename && filename.includes('.')) {
+            return filename;
+        }
+        
+        // Generate a filename based on the URL
+        const extension = getFileExtension(url);
+        const timestamp = Date.now();
+        return `media_${timestamp}${extension}`;
+    } catch (error) {
+        // Fallback filename
+        const timestamp = Date.now();
+        const extension = getFileExtension(url);
+        return `media_${timestamp}${extension}`;
+    }
+}
+
+// Get file extension from URL
+function getFileExtension(url) {
+    const extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.mp4', '.webm', '.ogg', '.avi', '.mov'];
+    
+    for (const ext of extensions) {
+        if (url.toLowerCase().includes(ext)) {
+            return ext;
+        }
+    }
+    
+    return '.bin'; // Default extension
+}
+
+// Show download progress toast
+function showDownloadProgressToast(total, type) {
+    const toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) return;
+    
+    const progressToast = document.createElement('div');
+    progressToast.id = 'downloadProgressToast';
+    progressToast.className = 'toast show';
+    progressToast.innerHTML = `
+        <div class="toast-header">
+            <i class="fas fa-download text-primary me-2"></i>
+            <strong class="me-auto">Baixando ${type}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span>Progresso:</span>
+                <span id="downloadProgressText">0 / ${total}</span>
+            </div>
+            <div class="progress">
+                <div id="downloadProgressBar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+            </div>
+        </div>
+    `;
+    
+    toastContainer.appendChild(progressToast);
+}
+
+// Update download progress
+function updateDownloadProgress(current, total) {
+    const progressText = document.getElementById('downloadProgressText');
+    const progressBar = document.getElementById('downloadProgressBar');
+    
+    if (progressText && progressBar) {
+        const percentage = Math.round((current / total) * 100);
+        progressText.textContent = `${current} / ${total}`;
+        progressBar.style.width = `${percentage}%`;
+        progressBar.setAttribute('aria-valuenow', percentage);
+    }
+}
+
+// Hide download progress toast
+function hideDownloadProgressToast() {
+    const progressToast = document.getElementById('downloadProgressToast');
+    if (progressToast) {
+        const bsToast = new bootstrap.Toast(progressToast);
+        bsToast.hide();
+        setTimeout(() => {
+            progressToast.remove();
+        }, 500);
+    }
+}
+
+// Show completion toast
+function showCompletionToast(count, type) {
+    const toastContainer = document.querySelector('.toast-container');
+    if (!toastContainer) return;
+    
+    const completionToast = document.createElement('div');
+    completionToast.className = 'toast';
+    completionToast.innerHTML = `
+        <div class="toast-header">
+            <i class="fas fa-check-circle text-success me-2"></i>
+            <strong class="me-auto">Download Concluído!</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">
+            ${count} ${type} foram enviados para download.
+        </div>
+    `;
+    
+    toastContainer.appendChild(completionToast);
+    const bsToast = new bootstrap.Toast(completionToast);
+    bsToast.show();
+    
+    // Auto remove after some time
+    setTimeout(() => {
+        completionToast.remove();
+    }, 5000);
 }
