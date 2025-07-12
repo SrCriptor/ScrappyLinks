@@ -1,0 +1,47 @@
+[phases.setup]
+nixPkgs = ["python311", "pip"]
+packages = ["python3", "python3Packages.pip"]
+
+[phases.install]
+commands = [
+  "python3 -m pip install --upgrade pip",
+  "python3 -m pip install -r requirements.txt"
+]
+
+[phases.build]
+commands = []
+
+[phases.start]
+commands = [
+  "gunicorn app:app --bind 0.0.0.0:$PORT"
+]
+
+[phases.setup]
+nixPkgs = ["python311", "pip"]
+packages = ["python3", "python3Packages.pip"]
+
+[phases.install]
+commands = [
+  "python3 -m pip install --upgrade pip",
+  "python3 -m pip install -r requirements.txt"
+]
+
+[phases.start]
+commands = [
+  "python3 app.py"
+]
+
+[phases.setup]
+nixPkgs = ["python311", "pip"]
+packages = ["python3", "python3Packages.pip"]
+
+[phases.install]
+commands = [
+  "python3 -m pip install --upgrade pip",
+  "python3 -m pip install -r requirements.txt"
+]
+
+[phases.start]
+commands = [
+  "python3 app.py"
+]
