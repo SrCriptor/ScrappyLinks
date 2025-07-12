@@ -1,0 +1,13 @@
+# Ignorar caches e arquivos temporários
+.cache/
+.local/
+__pycache__/
+node_modules/
+
+# Ignorar arquivos sensíveis
+.bash_history
+.env
+
+# Ignorar arquivos de log e temporários
+*.log
+*.tmp
